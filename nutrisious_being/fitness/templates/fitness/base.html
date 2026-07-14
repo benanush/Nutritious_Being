@@ -1,0 +1,121 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Nutrisious Being - Diet & Fitness Helper{% endblock %}</title>
+    
+    <!-- Link CSS -->
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    
+    <!-- FontAwesome for Icons -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    {% block extra_head %}{% endblock %}
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar Navigation -->
+        <nav class="sidebar">
+            <div class="brand">
+                <div class="brand-icon">N</div>
+                <span class="brand-name">Nutrisious Being</span>
+            </div>
+            
+            {% if user.is_authenticated %}
+            <ul class="nav-menu">
+                <li class="nav-item {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">
+                    <a href="{% url 'dashboard' %}">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12l8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25" />
+                        </svg>
+                        <span>Dashboard</span>
+                    </a>
+                </li>
+                
+                <li class="nav-item {% if request.resolver_match.url_name == 'food_log' %}active{% endif %}">
+                    <a href="{% url 'food_log' %}">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 8.25v-1.5m0 1.5c-1.355 0-2.697-.056-4.024-.166C6.845 6.476 6 5.54 6 4.46V3.75m6 4.5c1.355 0 2.697-.056 4.024-.166C17.155 6.476 18 5.54 18 4.46V3.75m-6 4.5v5.25m0-5.25a39.791 39.791 0 00-3.07-.156m3.07.156c1.033.018 2.059.07 3.07.156m-3.07-1.5c-1.02-.01-2.04-.056-3.05-.137a1.498 1.498 0 00-1.38 1.341v4.82c0 .741.515 1.38 1.258 1.514 1.05.19 2.12.316 3.212.378m3.05-.137c1.02-.01 2.04-.056 3.05-.137a1.498 1.498 0 001.38-1.341v-4.82c0-.741-.515-1.38-1.258-1.514a41.052 41.052 0 00-3.212-.378m0 0v-1.5m0 0H8.25m0 0v-1.5m0 0H12" />
+                        </svg>
+                        <span>Diet Tracker</span>
+                    </a>
+                </li>
+                
+                <li class="nav-item {% if request.resolver_match.url_name == 'exercise_log' %}active{% endif %}">
+                    <a href="{% url 'exercise_log' %}">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z" />
+                        </svg>
+                        <span>Exercises</span>
+                    </a>
+                </li>
+                
+                <li class="nav-item {% if request.resolver_match.url_name == 'profile' %}active{% endif %}">
+                    <a href="{% url 'profile' %}">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
+                        </svg>
+                        <span>My Profile</span>
+                    </a>
+                </li>
+                
+                <li class="nav-item">
+                    <a href="{% url 'logout' %}">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15M12 9l-3 3m0 0l3 3m-3-3h12.75" />
+                        </svg>
+                        <span>Logout</span>
+                    </a>
+                </li>
+            </ul>
+            
+            <div class="user-profile-summary">
+                <div class="avatar-circle">
+                    {{ user.username|slice:":1"|upper }}
+                </div>
+                <div class="profile-info">
+                    <div class="profile-username">{{ user.username }}</div>
+                    <div class="profile-meta">{{ user.profile.get_fitness_goal_display }}</div>
+                </div>
+            </div>
+            {% endif %}
+        </nav>
+        
+        <!-- Main Content Area -->
+        <main class="main-content">
+            <!-- Top Header Bar -->
+            <div class="header-bar">
+                <div class="header-title">
+                    {% block header_left %}
+                    <h1>Nutrisious Being</h1>
+                    <p>Track. Balance. Transform.</p>
+                    {% endblock %}
+                </div>
+                <div class="header-right">
+                    {% block header_right %}
+                    <!-- Dynamically loaded elements -->
+                    {% endblock %}
+                </div>
+            </div>
+            
+            <!-- Alert Messages -->
+            {% if messages %}
+            <div class="messages-container">
+                {% for message in messages %}
+                <div class="alert-message {{ message.tags }}">
+                    <span>{{ message }}</span>
+                    <button style="background:none; border:none; color:inherit; font-size:1.1rem; cursor:pointer;" onclick="this.parentElement.remove();">&times;</button>
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+            
+            <!-- Page Contents -->
+            {% block content %}{% endblock %}
+        </main>
+    </div>
+    
+    {% block scripts %}{% endblock %}
+</body>
+</html>

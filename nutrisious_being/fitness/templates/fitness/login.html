@@ -1,0 +1,40 @@
+{% extends 'fitness/base.html' %}
+{% block title %}Login - Nutrisious Being{% endblock %}
+
+{% block content %}
+<div class="auth-page">
+    <div class="glass-card auth-card">
+        <div class="auth-header">
+            <div style="display:inline-flex; width:50px; height:50px; border-radius:12px; background:linear-gradient(135deg, var(--color-primary), var(--color-secondary)); align-items:center; justify-content:center; font-family:var(--font-heading); font-weight:800; font-size:1.5rem; margin-bottom:12px;">N</div>
+            <h2>Welcome Back</h2>
+            <p>Enter your details to access your dashboard</p>
+        </div>
+        
+        <form method="POST" action="{% url 'login' %}" style="display:flex; flex-direction:column; gap:16px;">
+            {% csrf_token %}
+            
+            {% for field in form %}
+            <div class="form-group" style="margin-bottom:0;">
+                <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                {{ field }}
+                {% if field.errors %}
+                <span style="font-size:0.8rem; color:var(--color-protein); margin-top:4px;">{{ field.errors.0 }}</span>
+                {% endif %}
+            </div>
+            {% endfor %}
+            
+            <button type="submit" class="btn-premium" style="justify-content:center; width:100%; margin-top:12px;">
+                Login to Dashboard
+            </button>
+        </form>
+        
+        <div class="auth-links">
+            Don't have an account? <a href="{% url 'register' %}">Create one here</a>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+<!-- Override header and sidebar for clean auth pages -->
+{% block header_left %}{% endblock %}
+{% block header_right %}{% endblock %}

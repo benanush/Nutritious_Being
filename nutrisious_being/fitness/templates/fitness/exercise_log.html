@@ -1,0 +1,126 @@
+{% extends 'fitness/base.html' %}
+{% block title %}Exercises - Nutrisious Being{% endblock %}
+
+{% block header_left %}
+<h1>Exercise Tracker</h1>
+<p>Log your activities to calculate active calorie burning and track fitness duration.</p>
+{% endblock %}
+
+{% block content %}
+<div class="log-layout-grid">
+    <!-- Left Column: Add Exercise Form -->
+    <div class="glass-card">
+        <h3 style="font-size:1.1rem; border-bottom:1px solid rgba(255,255,255,0.08); padding-bottom:12px; margin-bottom:20px;">Log Activity</h3>
+        
+        <form method="POST" style="display:flex; flex-direction:column; gap:16px;">
+            {% csrf_token %}
+            {% for field in form %}
+            <div class="form-group" style="margin-bottom:0;">
+                <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                {{ field }}
+                {% if field.errors %}
+                <span style="font-size:0.8rem; color:var(--color-protein); margin-top:4px;">{{ field.errors.0 }}</span>
+                {% endif %}
+            </div>
+            {% endfor %}
+            
+            <button type="submit" class="btn-premium" style="justify-content:center; margin-top:8px;">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" style="width:18px; height:18px;">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z" />
+                </svg>
+                Log Activity
+            </button>
+        </form>
+    </div>
+    
+    <!-- Right Column: Today's Summary & History -->
+    <div style="display:flex; flex-direction:column; gap:24px;">
+        
+        <!-- Today's Exercise Stats Summary Card -->
+        <div class="glass-card" style="display:grid; grid-template-columns:1fr 1fr; gap:16px; text-align:center;">
+            <div>
+                <span class="metric-sub">Total Active Burn</span>
+                <div style="font-size:1.6rem; font-weight:700; color:var(--color-secondary); margin-top:4px;">{{ today_burned }} <span style="font-size:0.8rem; color:var(--text-secondary);">kcal</span></div>
+            </div>
+            <div>
+                <span class="metric-sub">Active Duration</span>
+                <div style="font-size:1.6rem; font-weight:700; color:#FFFFFF; margin-top:4px;">{{ today_duration }} <span style="font-size:0.8rem; color:var(--text-secondary);">mins</span></div>
+            </div>
+        </div>
+        
+        <!-- Today's Logs Table -->
+        <div class="glass-card logs-table-container">
+            <h3 style="font-size:1.1rem; border-bottom:1px solid rgba(255,255,255,0.08); padding-bottom:12px;">Today's Activities</h3>
+            
+            {% if today_logs %}
+            <table class="logs-table">
+                <thead>
+                    <tr>
+                        <th>Activity Name</th>
+                        <th>Duration</th>
+                        <th>Calories Burned</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for log in today_logs %}
+                    <tr>
+                        <td style="font-weight:600;">{{ log.activity_name }}</td>
+                        <td>{{ log.duration_minutes }} mins</td>
+                        <td style="font-weight:600; color:var(--color-secondary);">{{ log.calories_burned }} kcal</td>
+                        <td>
+                            <form method="POST" action="{% url 'delete_exercise' log.pk %}">
+                                {% csrf_token %}
+                                <button type="submit" class="btn-danger">Delete</button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <div class="empty-state">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+                <p>No activities logged for today yet. Get active and log above!</p>
+            </div>
+            {% endif %}
+        </div>
+        
+        <!-- Past Logs (History) -->
+        {% if past_logs %}
+        <div class="glass-card logs-table-container">
+            <h3 style="font-size:1.1rem; border-bottom:1px solid rgba(255,255,255,0.08); padding-bottom:12px;">Activity History</h3>
+            <table class="logs-table">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Activity Name</th>
+                        <th>Duration</th>
+                        <th>Calories Burned</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for log in past_logs %}
+                    <tr>
+                        <td style="font-size:0.85rem; color:var(--text-secondary);">{{ log.date|date:"M d, Y" }}</td>
+                        <td style="font-weight:600;">{{ log.activity_name }}</td>
+                        <td>{{ log.duration_minutes }} mins</td>
+                        <td style="font-weight:600; color:var(--color-secondary);">{{ log.calories_burned }} kcal</td>
+                        <td>
+                            <form method="POST" action="{% url 'delete_exercise' log.pk %}">
+                                {% csrf_token %}
+                                <button type="submit" class="btn-danger">Delete</button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

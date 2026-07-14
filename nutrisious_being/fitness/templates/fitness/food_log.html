@@ -1,0 +1,150 @@
+{% extends 'fitness/base.html' %}
+{% block title %}Diet Tracker - Nutrisious Being{% endblock %}
+
+{% block header_left %}
+<h1>Diet Tracker</h1>
+<p>Log your meals to monitor caloric intake and macronutrient distribution.</p>
+{% endblock %}
+
+{% block content %}
+<div class="log-layout-grid">
+    <!-- Left Column: Add Food Form -->
+    <div class="glass-card">
+        <h3 style="font-size:1.1rem; border-bottom:1px solid rgba(255,255,255,0.08); padding-bottom:12px; margin-bottom:20px;">Log Food Item</h3>
+        
+        <form method="POST" style="display:flex; flex-direction:column; gap:16px;">
+            {% csrf_token %}
+            {% for field in form %}
+            <div class="form-group" style="margin-bottom:0;">
+                <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                {{ field }}
+                {% if field.errors %}
+                <span style="font-size:0.8rem; color:var(--color-protein); margin-top:4px;">{{ field.errors.0 }}</span>
+                {% endif %}
+            </div>
+            {% endfor %}
+            
+            <button type="submit" class="btn-premium" style="justify-content:center; margin-top:8px;">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" style="width:18px; height:18px;">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                </svg>
+                Add Meal Item
+            </button>
+        </form>
+    </div>
+    
+    <!-- Right Column: Today's Summary & History -->
+    <div style="display:flex; flex-direction:column; gap:24px;">
+        
+        <!-- Today's Nutrition Summary Card -->
+        <div class="glass-card" style="display:grid; grid-template-columns:repeat(4, 1fr); gap:16px; text-align:center;">
+            <div>
+                <span class="metric-sub">Calories</span>
+                <div style="font-size:1.6rem; font-weight:700; color:var(--color-calories); margin-top:4px;">{{ today_calories }} <span style="font-size:0.8rem; color:var(--text-secondary);">kcal</span></div>
+            </div>
+            <div>
+                <span class="metric-sub">Protein</span>
+                <div style="font-size:1.6rem; font-weight:700; color:var(--color-protein); margin-top:4px;">{{ today_protein|floatformat:1 }} <span style="font-size:0.8rem; color:var(--text-secondary);">g</span></div>
+            </div>
+            <div>
+                <span class="metric-sub">Carbs</span>
+                <div style="font-size:1.6rem; font-weight:700; color:var(--color-carbs); margin-top:4px;">{{ today_carbs|floatformat:1 }} <span style="font-size:0.8rem; color:var(--text-secondary);">g</span></div>
+            </div>
+            <div>
+                <span class="metric-sub">Fats</span>
+                <div style="font-size:1.6rem; font-weight:700; color:var(--color-fats); margin-top:4px;">{{ today_fats|floatformat:1 }} <span style="font-size:0.8rem; color:var(--text-secondary);">g</span></div>
+            </div>
+        </div>
+        
+        <!-- Today's Logs Table -->
+        <div class="glass-card logs-table-container">
+            <h3 style="font-size:1.1rem; border-bottom:1px solid rgba(255,255,255,0.08); padding-bottom:12px;">Today's Meals</h3>
+            
+            {% if today_logs %}
+            <table class="logs-table">
+                <thead>
+                    <tr>
+                        <th>Food Name</th>
+                        <th>Meal</th>
+                        <th>Calories</th>
+                        <th>Macros (P/C/F)</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for log in today_logs %}
+                    <tr>
+                        <td style="font-weight:600;">{{ log.food_name }}</td>
+                        <td>
+                            <span class="meal-badge {{ log.get_meal_type_display|lower }}">
+                                {{ log.get_meal_type_display }}
+                            </span>
+                        </td>
+                        <td style="font-weight:600; color:#FFFFFF;">{{ log.calories }} kcal</td>
+                        <td class="macro-numbers" style="font-size:0.85rem;">
+                            {{ log.protein|floatformat:0 }}g / {{ log.carbs|floatformat:0 }}g / {{ log.fats|floatformat:0 }}g
+                        </td>
+                        <td>
+                            <form method="POST" action="{% url 'delete_food' log.pk %}">
+                                {% csrf_token %}
+                                <button type="submit" class="btn-danger">Delete</button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <div class="empty-state">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+                <p>No food logged for today yet. Start logging above!</p>
+            </div>
+            {% endif %}
+        </div>
+        
+        <!-- Past Logs (History) -->
+        {% if past_logs %}
+        <div class="glass-card logs-table-container">
+            <h3 style="font-size:1.1rem; border-bottom:1px solid rgba(255,255,255,0.08); padding-bottom:12px;">Past Logs</h3>
+            <table class="logs-table">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Food Name</th>
+                        <th>Meal</th>
+                        <th>Calories</th>
+                        <th>Macros (P/C/F)</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for log in past_logs %}
+                    <tr>
+                        <td style="font-size:0.85rem; color:var(--text-secondary);">{{ log.date|date:"M d, Y" }}</td>
+                        <td style="font-weight:600;">{{ log.food_name }}</td>
+                        <td>
+                            <span class="meal-badge {{ log.get_meal_type_display|lower }}">
+                                {{ log.get_meal_type_display }}
+                            </span>
+                        </td>
+                        <td style="font-weight:600; color:#FFFFFF;">{{ log.calories }} kcal</td>
+                        <td class="macro-numbers" style="font-size:0.85rem;">
+                            {{ log.protein|floatformat:0 }}g / {{ log.carbs|floatformat:0 }}g / {{ log.fats|floatformat:0 }}g
+                        </td>
+                        <td>
+                            <form method="POST" action="{% url 'delete_food' log.pk %}">
+                                {% csrf_token %}
+                                <button type="submit" class="btn-danger">Delete</button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

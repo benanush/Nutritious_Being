@@ -1,0 +1,311 @@
+{% extends 'fitness/base.html' %}
+{% block title %}Dashboard - Nutrisious Being{% endblock %}
+
+{% block header_left %}
+<h1>Hi, {{ user.username }}!</h1>
+<p>Here is your nutrition and fitness summary for today.</p>
+{% endblock %}
+
+{% block content %}
+<!-- Main Dashboard Layout Grid -->
+<div class="summary-grid">
+    <!-- Left Section: Calories and Quick Metrics -->
+    <div style="display:flex; flex-direction:column; gap:24px;">
+        
+        <!-- Calorie Ring Summary Card -->
+        <div class="glass-card calorie-card">
+            <div class="calorie-info">
+                <span class="metric-sub">Calorie Balance</span>
+                <div class="metric-big">{{ remaining_calories }}</div>
+                <span class="metric-sub" style="font-weight:600; color:var(--text-primary);">kcal remaining</span>
+                
+                <div class="calorie-math">
+                    <div class="math-item">
+                        <span class="metric-sub">Target</span>
+                        <span class="math-value target">{{ targets.calories }}</span>
+                    </div>
+                    <div style="font-size:1.5rem; color:var(--text-muted); font-family:var(--font-heading);">-</div>
+                    <div class="math-item">
+                        <span class="metric-sub">Food</span>
+                        <span class="math-value consumed">{{ today_calories }}</span>
+                    </div>
+                    <div style="font-size:1.5rem; color:var(--text-muted); font-family:var(--font-heading);">+</div>
+                    <div class="math-item">
+                        <span class="metric-sub">Active</span>
+                        <span class="math-value burned">{{ today_burned }}</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Circular Progress Ring -->
+            <div class="progress-ring-container">
+                <svg class="ring-svg" width="160" height="160">
+                    <defs>
+                        <linearGradient id="calorieGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" stop-color="var(--color-primary)" />
+                            <stop offset="100%" stop-color="var(--color-secondary)" />
+                        </linearGradient>
+                    </defs>
+                    <circle class="ring-circle-bg" r="70" cx="80" cy="80"></circle>
+                    <circle class="ring-circle-progress" r="70" cx="80" cy="80"
+                            stroke-dasharray="440"
+                            stroke-dashoffset="calc(440 - (440 * {{ calorie_progress_pct }}) / 100)"></circle>
+                </svg>
+                <div class="progress-ring-text">
+                    <span class="number">{{ calorie_progress_pct }}%</span>
+                    <span class="label">of target</span>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Health & Fitness Calculators Info Grid -->
+        <div class="quick-metrics-grid">
+            <!-- BMI Widget -->
+            <div class="glass-card metric-card bmi">
+                <div class="icon-row">
+                    <span class="metric-sub">Body Mass Index</span>
+                    <div class="icon-wrapper">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width:20px; height:20px;">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                        </svg>
+                    </div>
+                </div>
+                <div class="value">{{ bmi }}</div>
+                <div class="desc" style="font-weight:600; color:{% if bmi_category == 'Normal' %}#10B981{% else %}#EAB308{% endif %};">
+                    {{ bmi_category }}
+                </div>
+            </div>
+            
+            <!-- TDEE Widget -->
+            <div class="glass-card metric-card tdee">
+                <div class="icon-row">
+                    <span class="metric-sub">Daily TDEE</span>
+                    <div class="icon-wrapper">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width:20px; height:20px;">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z" />
+                        </svg>
+                    </div>
+                </div>
+                <div class="value">{{ tdee }} <span style="font-size:1rem; color:var(--text-secondary);">kcal</span></div>
+                <div class="desc">Maintenance energy</div>
+            </div>
+            
+            <!-- Goal Widget -->
+            <div class="glass-card metric-card goal">
+                <div class="icon-row">
+                    <span class="metric-sub">Current Goal</span>
+                    <div class="icon-wrapper">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width:20px; height:20px;">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M12.75 15l3-3m0 0l-3-3m3 3h-7.5M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                    </div>
+                </div>
+                <div class="value" style="font-size:1.4rem; padding-top:6px;">{{ profile.get_fitness_goal_display }}</div>
+                <div class="desc">Target weight: {{ profile.target_weight }} kg</div>
+            </div>
+        </div>
+        
+    </div>
+    
+    <!-- Right Section: Macro Targets Breakdown -->
+    <div class="glass-card macros-card">
+        <h3 style="font-size:1.1rem; border-bottom:1px solid rgba(255,255,255,0.08); padding-bottom:12px; margin-bottom:4px;">Macronutrient Targets</h3>
+        
+        <!-- Protein Row -->
+        <div class="macro-row">
+            <div class="macro-header">
+                <span class="macro-name">
+                    <span class="macro-dot protein"></span> Protein
+                </span>
+                <span class="macro-numbers"><span>{{ today_protein|floatformat:1 }}g</span> / {{ targets.protein }}g</span>
+            </div>
+            <div class="macro-progress-bg">
+                <div class="macro-progress-fill protein" style="width: {{ protein_progress_pct }}%"></div>
+            </div>
+        </div>
+        
+        <!-- Carbs Row -->
+        <div class="macro-row">
+            <div class="macro-header">
+                <span class="macro-name">
+                    <span class="macro-dot carbs"></span> Carbohydrates
+                </span>
+                <span class="macro-numbers"><span>{{ today_carbs|floatformat:1 }}g</span> / {{ targets.carbs }}g</span>
+            </div>
+            <div class="macro-progress-bg">
+                <div class="macro-progress-fill carbs" style="width: {{ carbs_progress_pct }}%"></div>
+            </div>
+        </div>
+        
+        <!-- Fats Row -->
+        <div class="macro-row">
+            <div class="macro-header">
+                <span class="macro-name">
+                    <span class="macro-dot fats"></span> Fats
+                </span>
+                <span class="macro-numbers"><span>{{ today_fats|floatformat:1 }}g</span> / {{ targets.fats }}g</span>
+            </div>
+            <div class="macro-progress-bg">
+                <div class="macro-progress-fill fats" style="width: {{ fats_progress_pct }}%"></div>
+            </div>
+        </div>
+        
+        <!-- Summary Alert -->
+        <div style="background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.04); border-radius:var(--border-radius-md); padding:16px; font-size:0.85rem; color:var(--text-secondary); margin-top:8px;">
+            Target ratios for your goal: 
+            <span style="color:#FFFFFF; font-weight:600;">
+                {% if profile.fitness_goal == 'LOSE' %}30% Pro / 40% Carb / 30% Fat
+                {% elif profile.fitness_goal == 'GAIN' %}30% Pro / 50% Carb / 20% Fat
+                {% else %}25% Pro / 45% Carb / 30% Fat{% endif %}
+            </span>. Tracking your macros ensures high-quality muscle maintenance and optimal energy levels.
+        </div>
+    </div>
+</div>
+
+<!-- Interactive Dashboard Widgets Grid -->
+<div class="widgets-grid">
+    <!-- Water Tracker Card -->
+    <div class="glass-card water-card">
+        <h3 style="font-size:1.1rem; border-bottom:1px solid rgba(255,255,255,0.08); padding-bottom:12px;">Water Tracker</h3>
+        
+        <div class="water-visual">
+            <div class="water-cup-container">
+                <!-- Cup water level goes from 0% to 100% height -->
+                <div class="water-level" style="height: {{ water_progress_pct }}%"></div>
+            </div>
+            
+            <div class="water-details">
+                <div style="font-size:2rem; font-weight:800; font-family:var(--font-heading); color:#FFFFFF;">
+                    {{ today_water_sum }} <span style="font-size:1rem; font-weight:500; color:var(--text-secondary);">/ {{ water_target }} ml</span>
+                </div>
+                <div class="macro-progress-bg" style="height: 6px; width: 100%;">
+                    <div style="height: 100%; background: var(--color-water); width: {{ water_progress_pct }}%; border-radius:4px;"></div>
+                </div>
+                <span class="desc">Water supports metabolic processes and energy levels.</span>
+            </div>
+        </div>
+        
+        <div class="water-quick-adds">
+            <form method="POST" action="{% url 'quick_add_water' %}" style="display:flex; gap:12px; width:100%;">
+                {% csrf_token %}
+                <button type="submit" name="amount_ml" value="250" class="btn-water">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" style="width:16px; height:16px;">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                    </svg>
+                    250 ml
+                </button>
+                <button type="submit" name="amount_ml" value="500" class="btn-water">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" style="width:16px; height:16px;">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                    </svg>
+                    500 ml
+                </button>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Weight History Chart Card -->
+    <div class="glass-card weight-card">
+        <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid rgba(255,255,255,0.08); padding-bottom:12px;">
+            <h3 style="font-size:1.1rem;">Weight Log & Progress</h3>
+            <span style="font-size:0.85rem; color:var(--text-secondary);">Current: <strong style="color:#FFFFFF;">{{ profile.current_weight }} kg</strong></span>
+        </div>
+        
+        <div class="chart-container">
+            {% if weight_values %}
+                <canvas id="weightChart"></canvas>
+            {% else %}
+                <div class="empty-state" style="padding:20px;">
+                    <span style="font-size:0.85rem;">No weight logs recorded yet. Log your weight to see progress.</span>
+                </div>
+            {% endif %}
+        </div>
+        
+        <!-- Quick Log Weight Form -->
+        <form method="POST" action="{% url 'weight_log' %}" class="weight-quick-log">
+            {% csrf_token %}
+            <div style="flex:1;">
+                <input type="number" step="0.1" name="weight" placeholder="Log new weight (kg)" class="form-control" style="padding: 10px 14px; font-size:0.85rem;" required>
+            </div>
+            <div>
+                <button type="submit" class="btn-premium" style="padding: 10px 16px; font-size:0.85rem;">
+                    Log Weight
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{% if weight_values %}
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        const ctx = document.getElementById('weightChart').getContext('2d');
+        
+        // Define premium neon gradients
+        const gradient = ctx.createLinearGradient(0, 0, 0, 160);
+        gradient.addColorStop(0, 'rgba(6, 182, 212, 0.4)');
+        gradient.addColorStop(1, 'rgba(6, 182, 212, 0)');
+        
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: {{ weight_dates|safe }},
+                datasets: [{
+                    label: 'Weight (kg)',
+                    data: {{ weight_values|safe }},
+                    borderColor: '#06B6D4',
+                    borderWidth: 3,
+                    backgroundColor: gradient,
+                    fill: true,
+                    tension: 0.4,
+                    pointBackgroundColor: '#FFFFFF',
+                    pointBorderColor: '#06B6D4',
+                    pointBorderWidth: 2,
+                    pointRadius: 4,
+                    pointHoverRadius: 6
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    tooltip: {
+                        backgroundColor: '#1E293B',
+                        titleFont: { family: 'Outfit', size: 12 },
+                        bodyFont: { family: 'Inter', size: 12 },
+                        borderColor: 'rgba(255, 255, 255, 0.08)',
+                        borderWidth: 1,
+                        padding: 10
+                    }
+                },
+                scales: {
+                    x: {
+                        grid: {
+                            display: false
+                        },
+                        ticks: {
+                            color: '#9CA3AF',
+                            font: { family: 'Inter', size: 10 }
+                        }
+                    },
+                    y: {
+                        grid: {
+                            color: 'rgba(255, 255, 255, 0.04)'
+                        },
+                        ticks: {
+                            color: '#9CA3AF',
+                            font: { family: 'Inter', size: 10 }
+                        }
+                    }
+                }
+            }
+        });
+    });
+</script>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,44 @@
+{% extends 'fitness/base.html' %}
+{% block title %}Sign Up - Nutrisious Being{% endblock %}
+
+{% block content %}
+<div class="auth-page">
+    <div class="glass-card auth-card" style="max-width: 600px;">
+        <div class="auth-header">
+            <div style="display:inline-flex; width:50px; height:50px; border-radius:12px; background:linear-gradient(135deg, var(--color-primary), var(--color-secondary)); align-items:center; justify-content:center; font-family:var(--font-heading); font-weight:800; font-size:1.5rem; margin-bottom:12px;">N</div>
+            <h2>Start Your Fitness Journey</h2>
+            <p>Create an account and setup your profile parameters</p>
+        </div>
+        
+        <form method="POST" action="{% url 'register' %}" style="display:grid; grid-template-columns: 1fr 1fr; gap:16px;">
+            {% csrf_token %}
+            
+            {% for field in form %}
+            <!-- Span full width for specific fields to layout nicely -->
+            <div class="form-group" style="margin-bottom:0; {% if field.name == 'username' or field.name == 'email' or field.name == 'password1' or field.name == 'password2' %}grid-column: span 2;{% endif %}">
+                <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                {{ field }}
+                {% if field.help_text and not field.errors %}
+                <span style="font-size:0.75rem; color:var(--text-secondary); margin-top:2px;">{{ field.help_text|safe }}</span>
+                {% endif %}
+                {% if field.errors %}
+                <span style="font-size:0.8rem; color:var(--color-protein); margin-top:4px;">{{ field.errors.0 }}</span>
+                {% endif %}
+            </div>
+            {% endfor %}
+            
+            <button type="submit" class="btn-premium" style="justify-content:center; grid-column: span 2; width:100%; margin-top:12px;">
+                Create Account & Set Targets
+            </button>
+        </form>
+        
+        <div class="auth-links" style="margin-top:24px;">
+            Already have an account? <a href="{% url 'login' %}">Login here</a>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+<!-- Override header for clean auth pages -->
+{% block header_left %}{% endblock %}
+{% block header_right %}{% endblock %}

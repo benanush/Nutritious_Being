@@ -1,0 +1,76 @@
+{% extends 'fitness/base.html' %}
+{% block title %}My Profile - Nutrisious Being{% endblock %}
+
+{% block header_left %}
+<h1>My Fitness Profile</h1>
+<p>Keep your biological metrics and goals updated to ensure precise BMR, TDEE, and nutrition calculations.</p>
+{% endblock %}
+
+{% block content %}
+<div class="log-layout-grid">
+    <!-- Left Column: Edit Profile Form -->
+    <div class="glass-card">
+        <h3 style="font-size:1.1rem; border-bottom:1px solid rgba(255,255,255,0.08); padding-bottom:12px; margin-bottom:20px;">Personal Metrics</h3>
+        
+        <form method="POST" style="display:flex; flex-direction:column; gap:16px;">
+            {% csrf_token %}
+            {% for field in form %}
+            <div class="form-group" style="margin-bottom:0;">
+                <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                {{ field }}
+                {% if field.errors %}
+                <span style="font-size:0.8rem; color:var(--color-protein); margin-top:4px;">{{ field.errors.0 }}</span>
+                {% endif %}
+            </div>
+            {% endfor %}
+            
+            <button type="submit" class="btn-premium" style="justify-content:center; margin-top:8px;">
+                Save Profile Details
+            </button>
+        </form>
+    </div>
+    
+    <!-- Right Column: Weight Log History -->
+    <div class="glass-card logs-table-container">
+        <h3 style="font-size:1.1rem; border-bottom:1px solid rgba(255,255,255,0.08); padding-bottom:12px;">Weight Tracking History</h3>
+        
+        {% if weight_history %}
+        <table class="logs-table">
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Weight</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for log in weight_history %}
+                <tr>
+                    <td style="font-weight:600;">{{ log.date|date:"F d, Y" }}</td>
+                    <td style="font-size:1.1rem; font-weight:700; color:#FFFFFF;">{{ log.weight }} kg</td>
+                    <td>
+                        <!-- Do not delete weight log if it's the only one left to prevent empty profile weight issues -->
+                        {% if weight_history.count > 1 %}
+                            <form method="POST" action="{% url 'delete_weight' log.pk %}">
+                                {% csrf_token %}
+                                <button type="submit" class="btn-danger">Delete</button>
+                            </form>
+                        {% else %}
+                            <span style="font-size:0.85rem; color:var(--text-muted);">Active Base Log</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <div class="empty-state">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+            </svg>
+            <p>No weight logs recorded yet.</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
